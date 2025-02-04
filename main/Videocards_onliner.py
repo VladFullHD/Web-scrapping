@@ -1,6 +1,7 @@
 import re
 import os
 import time
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -27,30 +28,38 @@ for header, value in headers.items():
 
 # Запуск браузера с указанными опциями
 driver = webdriver.Chrome(options=options)
-driver.get(url)
+# Открытие окна в полный экран (тем самым убираем окно MiniPay)
+driver.maximize_window()
 
 # Создаем директорию для сбора всех страниц
 if not os.path.exists('html_pages'):
     os.makedirs('html_pages')
 
-# Открытие окна в полный экран (тем самым убираем окно MiniPay)
-driver.maximize_window()
+# Указываем количество страниц
+num_pages = 59
 
-# Создаем объект ActionChains
-actions = ActionChains(driver)
+# Открытие заданного количества страниц, прокрутка вниз и сохранение страницы
+for page_num in range(1, num_pages + 1):
+    our_url = url + f"?page={page_num}" # Формируем URL текущей страницы
 
-# Указываем количество нажатий кнопки "END" и имитируем прокрутку вниз
-num_presses = 5
-for press in range (num_presses):
-    actions.send_keys(Keys.END).perform()
-    time.sleep(0.5)
+    driver.get(our_url)
+    time.sleep(3)
 
-# Вызываем метод для возврата HTML-кода страницы
-html = driver.page_source
+    # Создаем объект ActionChains
+    actions = ActionChains(driver)
+    # Прокрутка страницы вниз 5 раз
+    num_presses = 9
+    for press in range(num_presses):
+        actions.send_keys(Keys.PAGE_DOWN).perform()
+        time.sleep(1)
 
-# Сохраняем страницу в файл
-with open('onliner_videocards.html', 'w', encoding='utf-8') as file:
-    file.write(html)
+    # Сохраняем страницу в папку
+    filename = f'html_pages/page_{page_num}.html'
+    with open(filename, 'w', encoding='utf-8') as file:
+        file.write(driver.page_source)
+    print(f'Сохранена страница {page_num} из {num_pages}')
+
+    time.sleep(2)
 
 # Выходим из браузера
 driver.quit()
