@@ -32,6 +32,8 @@ class HTMLCollector:
         # Перебираем все заголовки в словаре и добавляем каждый заголовок в ChromeOptions
         for header, value in headers.items():
             options.add_argument(f'--header={header}:{value}')
+        # Отключаем сообщение о принятии cookies
+        options.add_argument("--disable-cookie-consent")
         # Запуск браузера с указанными опциями
         self.driver = webdriver.Chrome(options=options)
         # Открытие окна браузера в полный экран (сделал конкретно под onliner.by)
