@@ -10,56 +10,63 @@ import pandas as pd
 import json
 import csv
 
+class HTMLCollector:
+    # Инициализация
+    def __init__(self, url, num_pages, output_dir='html_pages', scroll_presses=9, scroll_delay=1, request_delay=2):
+        self.url = url
+        self.num_pages = num_pages
+        self.output_dir = output_dir
+        self.scroll_presses = scroll_presses
+        self.scroll.delay = scroll_delay
+        self.request_delay = request_delay
+        self.driver = None
 
-url = 'https://catalog.onliner.by/videocard'
+    def __enter__(self):
+        # Создаем объект ChromeOptions для настройки параметров запуска
+        options = webdriver.ChromeOptions()
+        # Создаем словарь с заголовками
+        headers = {
+            'Accept': '*/*',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        # Перебираем все заголовки в словаре и добавляем каждый заголовок в ChromeOptions
+        for header, value in headers.items():
+            options.add_argument(f'--header={header}:{value}')
+        # Запуск браузера с указанными опциями
+        self.driver = webdriver.Chrome(options=options)
+        # Открытие окна в полный экран (тем самым убираем окно MiniPay)
+        self.driver.maximize_window()
+        # Создаем директорию для сбора всех страниц
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+        return self
 
-# Создаем объект ChromeOptions для настройки параметров запуска
-options = webdriver.ChromeOptions()
+    def __exit__(self, *args):
+        if self.driver:
+            self.driver.quit()
 
-# Создаем словарь с заголовками
-headers = {
-    'Accept': '*/*',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-}
+    def collect_pages(self):
+        # Открытие заданного количества страниц, прокрутка вниз и сохранение страницы
+        for page_num in range(1, self.num_pages + 1):
+            our_url = self.url + f"?page={page_num}"
+            self.driver.get(our_url)
+            time.sleep(self.request_delay)
 
-# Перебираем все заголовки в словаре и добавляем каждый заголовок в ChromeOptions
-for header, value in headers.items():
-    options.add_argument(f'--header={header}:{value}')
+            # Прокрутка страницы вниз N раз
+            actions = ActionChains(self.driver)
+            for _ in range(self.scroll_presses):
+                actions.send_keys(Keys.PAGE_DOWN).perform()
+                time.sleep(self.request_delay)
+            # Сохраняем страницу в папку
+            filename = os.path.join(self.output_dir, f'page_{page_num}.html')
+            with open(filename, 'w', encoding='utf-8') as file:
+                file.write(self.driver.page_source)
+            print(f'Сохранена страница {page_num} из {self.num_pages}')
 
-# Запуск браузера с указанными опциями
-driver = webdriver.Chrome(options=options)
-# Открытие окна в полный экран (тем самым убираем окно MiniPay)
-driver.maximize_window()
+            time.sleep(self.request_delay)
 
-# Создаем директорию для сбора всех страниц
-if not os.path.exists('html_pages'):
-    os.makedirs('html_pages')
 
-# Указываем количество страниц
-num_pages = 59
 
-# Открытие заданного количества страниц, прокрутка вниз и сохранение страницы
-for page_num in range(1, num_pages + 1):
-    our_url = url + f"?page={page_num}" # Формируем URL текущей страницы
-
-    driver.get(our_url)
-    time.sleep(3)
-
-    # Создаем объект ActionChains
-    actions = ActionChains(driver)
-    # Прокрутка страницы вниз 5 раз
-    num_presses = 9
-    for press in range(num_presses):
-        actions.send_keys(Keys.PAGE_DOWN).perform()
-        time.sleep(1)
-
-    # Сохраняем страницу в папку
-    filename = f'html_pages/page_{page_num}.html'
-    with open(filename, 'w', encoding='utf-8') as file:
-        file.write(driver.page_source)
-    print(f'Сохранена страница {page_num} из {num_pages}')
-
-    time.sleep(2)
 
 # Выходим из браузера
 driver.quit()
