@@ -21,27 +21,39 @@ class HTMLParser:
         with open(filepath, 'r', encoding='utf-8') as file:
             src = file.read()
         soup = BeautifulSoup(src, 'lxml')
-        self.extract_card_data(soup)
+        self.extract_card_data(soup, filename)
 
-    def extract_card_data(self, soup):
+    def extract_card_data(self, soup, filename):
         data = soup.find_all('div', class_='catalog-form__offers-flex')
         name_tag = 'catalog-form__link catalog-form__link_primary-additional catalog-form__link_base-additional catalog-form__link_font-weight_semibold catalog-form__link_nodecor'
         special_price_tag = 'catalog-form__link catalog-form__link_nodecor catalog-form__link_error-alter catalog-form__link_huge-additional catalog-form__link_font-weight_bold'
         main_price_tag = 'catalog-form__link catalog-form__link_nodecor catalog-form__link_primary-additional catalog-form__link_huge-additional catalog-form__link_font-weight_bold'
+        none_price_tag = 'catalog-form__description catalog-form__description_primary catalog-form__description_condensed-additional catalog-form__description_font-weight_bold catalog-form__description_middle'
 
         card_prices = []
+
         for card in data:
             price = card.find('a', class_=main_price_tag)
             if price:
                 price = price.text.strip()
                 price = re.sub(r"[^\d,]", "", price).strip()
                 card_prices.append(price)
-            else:
+
+            elif card.find('a', class_=special_price_tag):
                 price = card.find('a', class_=special_price_tag).text.strip()
                 r_index = price.find('р')
                 price = price[:r_index].strip()
                 price = re.sub(r"[^\d,]", "", price).strip()
                 card_prices.append(price)
+
+            else:
+                price = card.find('div', none_price_tag).text.strip()
+                if price:
+                    card_prices.append(price)
+                else:
+                    print(f'Цена не найдена на странице: {filename}')
+                    card_prices.append(None)
+
 
         # Собираем информацию по названиям видеокарт
         card_names = []
