@@ -11,15 +11,20 @@ import json
 import csv
 
 class HTMLCollector:
-    # Инициализация
+    """
+    При помощи этого класса мы можем открывать необходимое количество страниц
+    и сохранять их в файл HTML для последующей обработки парсером.
+    """
+
     def __init__(self, url, num_pages, output_dir='html_pages', scroll_presses=9, scroll_delay=1, request_delay=2):
-        self.url = url
-        self.num_pages = num_pages
-        self.output_dir = output_dir
-        self.scroll_presses = scroll_presses
-        self.scroll.delay = scroll_delay
-        self.request_delay = request_delay
+        self.url = url # Адрес страницы
+        self.num_pages = num_pages # Количество страниц (пагинация)
+        self.output_dir = output_dir # Название папки для сохранения HTML-страниц
+        self.scroll_presses = scroll_presses # Количество нажатий на клавишу Page Down
+        self.scroll.delay = scroll_delay # Задержка между нажатиями на клавишу Page Down
+        self.request_delay = request_delay # Задержка между переходами к след. действию
         self.driver = None
+
 
     def __enter__(self):
         # Создаем объект ChromeOptions для настройки параметров запуска
@@ -34,35 +39,37 @@ class HTMLCollector:
             options.add_argument(f'--header={header}:{value}')
         # Запуск браузера с указанными опциями
         self.driver = webdriver.Chrome(options=options)
-        # Открытие окна в полный экран (тем самым убираем окно MiniPay)
+        # Открытие окна браузера в полный экран (сделал конкретно под onliner.by)
         self.driver.maximize_window()
         # Создаем директорию для сбора всех страниц
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         return self
 
+
     def __exit__(self, *args):
         if self.driver:
             self.driver.quit()
 
+
     def collect_pages(self):
-        # Открытие заданного количества страниц, прокрутка вниз и сохранение страницы
+        # Открываем заданное кол-во страниц
         for page_num in range(1, self.num_pages + 1):
             our_url = self.url + f"?page={page_num}"
             self.driver.get(our_url)
             time.sleep(self.request_delay)
 
-            # Прокрутка страницы вниз N раз
+            # Прокрутка страницы вниз заданное кол-во раз
             actions = ActionChains(self.driver)
             for _ in range(self.scroll_presses):
                 actions.send_keys(Keys.PAGE_DOWN).perform()
                 time.sleep(self.request_delay)
-            # Сохраняем страницу в папку
+
+            # Сохранение кода страницы в указанную директорию
             filename = os.path.join(self.output_dir, f'page_{page_num}.html')
             with open(filename, 'w', encoding='utf-8') as file:
                 file.write(self.driver.page_source)
             print(f'Сохранена страница {page_num} из {self.num_pages}')
-
             time.sleep(self.request_delay)
 
 
