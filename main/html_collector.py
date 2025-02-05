@@ -58,8 +58,10 @@ class HTMLCollector:
             # Открываем список с общим количеством страниц
             pagination_list = WebDriverWait(driver, 5).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR,
-                                            '#container > div > div > div > div > div.catalog-content > div.catalog-wrapper > div > div > div.catalog-form__tabs > div > div > div > div > div.catalog-form__filter-part.catalog-form__filter-part_2 > div.catalog-pagination.catalog-pagination_visible > div > div'))
-            )
+                                            '#container > div > div > div > div > div.catalog-content > '
+                                            'div.catalog-wrapper > div > div > div.catalog-form__tabs > div > div > '
+                                            'div > div > div.catalog-form__filter-part.catalog-form__filter-part_2 > '
+                                            'div.catalog-pagination.catalog-pagination_visible > div > div')))
             driver.execute_script("arguments[0].click();", pagination_list)
             time.sleep(2)
 
@@ -85,7 +87,8 @@ class HTMLCollector:
         # Создаем словарь с заголовками
         headers = {
             'Accept': '*/*',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                          'Chrome/91.0.4472.124 Safari/537.36'
         }
         # Перебираем все заголовки в словаре и добавляем каждый заголовок в ChromeOptions
         for header, value in headers.items():
