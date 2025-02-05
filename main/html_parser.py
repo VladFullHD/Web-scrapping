@@ -11,9 +11,12 @@ class HTMLParser:
     """
 
 
-    def __init__(self, input_dir='html_pages', output_file='card_data.csv'):
-        self.input_dir = input_dir
-        self.output_file = output_file
+    def __init__(self, input_dir='html_pages', output_file='card_data.csv',
+                 output_dir='data'):
+        self.input_dir = input_dir # Указываем директорию с HTML-страницами
+        self.output_file = output_file # Указываем название файла, в который будет сохранена полученная информация
+        self.output_dir = output_dir # Указываем название папки, в которую будет сохранен наш файл
+        # Словарь, в который передается вся полученная информация по типу {'Видеокарта': {'Цена': 100, 'URL': https://}
         self.card_data = {}
 
 
@@ -94,7 +97,12 @@ class HTMLParser:
 
     # Сохраняет полученные данные в csv-файл.
     def save_to_csv(self):
-        with open(self.output_file, 'w', encoding='utf-8', newline='') as file:
+        if not os.path.exists(self.output_dir): # Проверка, существует ли папка
+            os.makedirs(self.output_dir)
+
+        filepath = os.path.join(self.output_dir, self.output_file)
+
+        with open(filepath, 'w', encoding='utf-8', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Name', 'Price', 'URL'])
             for name, data in self.card_data.items():
